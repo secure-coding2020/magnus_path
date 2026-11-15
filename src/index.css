@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* Brand colours and font (same as the original site) */
+@theme {
+  --font-sans: "Inter", sans-serif;
+  --color-brand-dark: #0f172a;
+  --color-brand-card: #1e293b;
+  --color-brand-primary: #3b82f6;
+  --color-brand-accent: #06b6d4;
+  --color-brand-light: #f8fafc;
+}
+
+body {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(to right, #3b82f6, #06b6d4);
+}
+
+.bg-gradient-brand {
+  background-image: linear-gradient(to right, #3b82f6, #06b6d4);
+}
+
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.3);
+}
+
+.glow-border {
+  position: relative;
+  isolation: isolate;
+}
+.glow-border::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #3b82f6, #06b6d4);
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.glow-border:hover::before {
+  opacity: 1;
+}
+
+.hero-bg {
+  background-image:
+    radial-gradient(circle at top right, rgba(6, 182, 212, 0.15), transparent 40%),
+    radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.15), transparent 40%);
+}
