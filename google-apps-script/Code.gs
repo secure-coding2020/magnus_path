@@ -7,6 +7,10 @@
  */
 
 const SHEET_NAME = 'Bookings';
+
+// Where booking alerts are sent. Leave empty ('') to send them to the
+// Google account that owns this script, or put another address in quotes.
+const NOTIFY_EMAIL = '';
 const HEADERS = ['Timestamp', 'Name', 'Email', 'Mobile Number', 'Area of Interest'];
 
 const ALLOWED_INTERESTS = [
@@ -39,8 +43,16 @@ function doPost(e) {
     }
     if (ALLOWED_INTERESTS.indexOf(interest) === -1) return json({ result: 'error', message: 'Invalid area of interest.' });
 
+    const now = new Date();
     const sheet = getSheet();
-    sheet.appendRow([new Date(), safe(name), safe(email), safe(mobile), safe(interest)]);
+    sheet.appendRow([now, safe(name), safe(email), safe(mobile), safe(interest)]);
+
+    // Email alert. If it fails, the booking is still saved.
+    try {
+      sendBookingAlert({ name: name, email: email, mobile: mobile, interest: interest, time: now });
+    } catch (mailErr) {
+      console.error('Email alert failed: ' + mailErr);
+    }
 
     return json({ result: 'success' });
   } catch (err) {
@@ -53,6 +65,57 @@ function doPost(e) {
 // Lets you open the URL in a browser to check the script is live
 function doGet() {
   return json({ result: 'ok', message: 'Magnus Path booking endpoint is running.' });
+}
+
+function sendBookingAlert(b) {
+  const to = NOTIFY_EMAIL || Session.getEffectiveUser().getEmail();
+  const when = Utilities.formatDate(b.time, 'Asia/Kolkata', 'dd MMM yyyy, hh:mm a') + ' IST';
+  const sheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+  const phoneLink = b.mobile.replace(/[^0-9+]/g, '');
+
+  const row = (label, value) =>
+    '<tr><td style="padding:8px 12px;color:#64748b;white-space:nowrap">' + label + '</td>' +
+    '<td style="padding:8px 12px;color:#0f172a;font-weight:600">' + value + '</td></tr>';
+
+  const html =
+    '<div style="font-family:Arial,sans-serif;max-width:520px">' +
+    '<h2 style="color:#0f172a;margin:0 0 4px">New Strategy Session Booking</h2>' +
+    '<p style="color:#64748b;margin:0 0 16px">' + when + '</p>' +
+    '<table style="border-collapse:collapse;background:#f8fafc;border-radius:8px;width:100%">' +
+    row('Name', escapeHtml(b.name)) +
+    row('Email', '<a href="mailto:' + escapeHtml(b.email) + '">' + escapeHtml(b.email) + '</a>') +
+    row('Mobile', '<a href="tel:' + escapeHtml(phoneLink) + '">' + escapeHtml(b.mobile) + '</a>') +
+    row('Interest', escapeHtml(b.interest)) +
+    '</table>' +
+    '<p style="margin:16px 0 0"><a href="' + sheetUrl + '" style="color:#3b82f6">Open the bookings sheet</a></p>' +
+    '<p style="color:#94a3b8;font-size:12px;margin-top:16px">Tip: press Reply to email ' + escapeHtml(b.name) + ' directly.</p>' +
+    '</div>';
+
+  MailApp.sendEmail({
+    to: to,
+    replyTo: b.email,
+    name: 'Magnus Path Website',
+    subject: 'New booking: ' + b.name + ' – ' + b.interest,
+    htmlBody: html,
+    body: 'New booking (' + when + ')\nName: ' + b.name + '\nEmail: ' + b.email +
+          '\nMobile: ' + b.mobile + '\nInterest: ' + b.interest + '\nSheet: ' + sheetUrl,
+  });
+}
+
+// Run this once from the editor (select it, click ▶ Run) to approve email
+// permission and receive a sample alert. It does not add a row to the sheet.
+function testEmailAlert() {
+  sendBookingAlert({
+    name: 'Test Person',
+    email: Session.getEffectiveUser().getEmail(),
+    mobile: '+91 98765 43210',
+    interest: 'Cyber Security Training',
+    time: new Date(),
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 function getSheet() {
