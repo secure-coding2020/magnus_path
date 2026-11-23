@@ -23,7 +23,18 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
-          <p>&copy; 2026 Magnus Path. All rights reserved.</p>
+          <div className="text-center md:text-left">
+            <p>&copy; 2026 Magnus Path. All rights reserved.</p>
+            <p className="mt-1 text-slate-400">
+              An initiative by Amit Tripathi &bull; Email:{' '}
+              <a
+                href="mailto:amit.tripathi02@gmail.com"
+                className="text-brand-accent hover:underline"
+              >
+                amit.tripathi02@gmail.com
+              </a>
+            </p>
+          </div>
           <div className="flex space-x-4 mt-4 md:mt-0">
             <a href="#" className="hover:text-white">Privacy Policy</a>
             <a href="#" className="hover:text-white">Terms of Service</a>
